@@ -31,11 +31,14 @@ jobs:
       - run: npm ci
 
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v4
 
       - name: Build
         run: npm run build
         env:
+          # Matches project vs user/org Pages (configure-pages base_path is "" at site root).
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: Upload artifact

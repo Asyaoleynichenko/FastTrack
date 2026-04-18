@@ -4,18 +4,31 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
-/** GitHub project pages are served from /<repo>/; Vite + router must use the same base. */
+/**
+ * Public path for built assets. Must match how GitHub Pages serves the site:
+ * - Project site: `https://user.github.io/<repo>/` → base `/<repo>/`
+ * - User/org site (`<user>.github.io` repo): root URL → base `/`
+ *
+ * In CI, `VITE_BASE_PATH` comes from `actions/configure-pages` output `base_path`
+ * (empty string at site root). If unset, we infer from `GITHUB_REPOSITORY` except
+ * for `*.github.io` repos, which are always root.
+ */
 function resolveBase(): string {
-  const explicit = process.env.VITE_BASE_PATH?.trim()
-  if (explicit) {
-    let b = explicit
+  const fromPages = process.env.VITE_BASE_PATH
+  if (fromPages !== undefined) {
+    const trimmed = fromPages.trim()
+    if (trimmed === '') return '/'
+    let b = trimmed
     if (!b.startsWith('/')) b = `/${b}`
     if (!b.endsWith('/')) b = `${b}/`
     return b
   }
+
   const gh = process.env.GITHUB_REPOSITORY
   if (gh?.includes('/')) {
-    return `/${gh.split('/')[1]}/`
+    const repo = gh.split('/')[1] ?? ''
+    if (/^.+\.github\.io$/i.test(repo)) return '/'
+    return `/${repo}/`
   }
   return '/'
 }
