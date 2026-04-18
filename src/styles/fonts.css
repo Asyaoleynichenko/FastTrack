@@ -4,10 +4,10 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/inter/wght-italic.css';
 
-/* Knockout Bold — self-hosted from public/fonts (desktop license). */
+/* Knockout Bold — path relative to this file so Vite rewrites URLs for GitHub Pages (no absolute /fonts/…). */
 @font-face {
   font-family: 'Knockout';
-  src: url('/fonts/Knockout-Bold.ttf') format('truetype');
+  src: url('../assets/fonts/Knockout-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
