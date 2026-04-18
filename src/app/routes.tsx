@@ -1,28 +1,17 @@
-import { Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router';
 import { TopNav } from './components/TopNav';
 import { ObjectsListPage } from './components/ObjectsListPage';
-
-function PageFallback() {
-  return (
-    <div className="flex flex-1 min-h-[40vh] items-center justify-center gap-2 text-sm text-mid bg-bg">
-      <span
-        className="inline-block size-4 shrink-0 rounded-full border-2 border-line border-t-mid animate-spin"
-        aria-hidden
-      />
-      Loading…
-    </div>
-  );
-}
+import { ServerDetailsPage } from './components/ServerDetailsPage';
+import { RacksPage } from './components/RacksPage';
+import { NetworkPage } from './components/NetworkPage';
+import { NotificationsPage } from './components/NotificationsPage';
 
 function Root() {
   return (
     <div className="min-h-screen flex flex-col bg-bg">
       <TopNav />
       <main className="flex-1">
-        <Suspense fallback={<PageFallback />}>
-          <Outlet />
-        </Suspense>
+        <Outlet />
       </main>
     </div>
   );
@@ -46,24 +35,10 @@ export const router = createBrowserRouter(
       Component: Root,
       children: [
         { index: true, Component: ObjectsListPage },
-        {
-          path: 'server/:id',
-          lazy: () =>
-            import('./components/ServerDetailsPage').then((m) => ({ Component: m.ServerDetailsPage })),
-        },
-        {
-          path: 'racks',
-          lazy: () => import('./components/RacksPage').then((m) => ({ Component: m.RacksPage })),
-        },
-        {
-          path: 'network',
-          lazy: () => import('./components/NetworkPage').then((m) => ({ Component: m.NetworkPage })),
-        },
-        {
-          path: 'notifications',
-          lazy: () =>
-            import('./components/NotificationsPage').then((m) => ({ Component: m.NotificationsPage })),
-        },
+        { path: 'server/:id', Component: ServerDetailsPage },
+        { path: 'racks', Component: RacksPage },
+        { path: 'network', Component: NetworkPage },
+        { path: 'notifications', Component: NotificationsPage },
         { path: '*', Component: NotFound },
       ],
     },
