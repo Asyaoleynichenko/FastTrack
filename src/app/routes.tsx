@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router';
 import { TopNav } from './components/TopNav';
+import { ObjectsListPage } from './components/ObjectsListPage';
 
 function PageFallback() {
   return (
@@ -44,11 +45,7 @@ export const router = createBrowserRouter(
       path: '/',
       Component: Root,
       children: [
-        {
-          index: true,
-          lazy: () =>
-            import('./components/ObjectsListPage').then((m) => ({ Component: m.ObjectsListPage })),
-        },
+        { index: true, Component: ObjectsListPage },
         {
           path: 'server/:id',
           lazy: () =>

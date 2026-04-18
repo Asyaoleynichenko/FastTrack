@@ -102,12 +102,12 @@ export default defineConfig(({ command }) => {
             if (
               id.includes('node_modules/react-dom') ||
               id.includes('node_modules/react/') ||
-              id.includes('node_modules/scheduler')
+              id.includes('node_modules/scheduler') ||
+              id.includes('node_modules/react-router') ||
+              id.includes('node_modules/lucide-react') ||
+              id.includes('node_modules/@radix-ui')
             )
               return 'react-vendor';
-            if (id.includes('node_modules/react-router')) return 'react-router';
-            if (id.includes('node_modules/@radix-ui')) return 'radix-ui';
-            if (id.includes('node_modules/lucide-react')) return 'lucide';
             if (id.includes('node_modules/recharts')) return 'recharts';
           },
         },
