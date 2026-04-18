@@ -1,0 +1,5 @@
+/* Inter variable font — self-hosted via @fontsource-variable/inter
+   Covers the full weight axis (100–900) and both upright + italic optical sizes.
+   No external network request — woff2 files are bundled directly into the build. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/inter/wght-italic.css';
