@@ -3,3 +3,12 @@
    No external network request — woff2 files are bundled directly into the build. */
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/inter/wght-italic.css';
+
+/* Knockout Bold — self-hosted from public/fonts (desktop license). */
+@font-face {
+  font-family: 'Knockout';
+  src: url('/fonts/Knockout-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

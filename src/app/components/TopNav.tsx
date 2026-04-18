@@ -131,7 +131,7 @@ export function TopNav() {
           >
             <Server className="w-4 h-4 text-white" />
           </div>
-          <span className="text-hi font-bold tracking-tight text-[15px] hidden xs:inline sm:inline font-[Knockout]">InfraView</span>
+          <span className="text-hi font-bold tracking-tight text-[15px] hidden xs:inline sm:inline font-['Knockout',Inter,sans-serif]">InfraView</span>
         </NavLink>
 
         {/* Divider — desktop only */}
