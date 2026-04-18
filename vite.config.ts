@@ -5,32 +5,38 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 /**
- * Public path for built assets. Must match how GitHub Pages serves the site:
- * - Project site: `https://user.github.io/<repo>/` → base `/<repo>/`
- * - User/org site (`<user>.github.io` repo): root URL → base `/`
- *
- * In CI, `VITE_BASE_PATH` comes from `actions/configure-pages` output `base_path`
- * (empty string at site root). If unset, we infer from `GITHUB_REPOSITORY` except
- * for `*.github.io` repos, which are always root.
+ * Path prefix for the SPA (no trailing slash), empty string at site root.
+ * CI: `VITE_BASE_PATH` from `actions/configure-pages` `base_path` (`""` at root).
+ * Fallback: repo segment of `GITHUB_REPOSITORY`, except `*.github.io` user/org sites.
  */
-function resolveBase(): string {
+function resolveRouterBasename(): string {
   const fromPages = process.env.VITE_BASE_PATH
   if (fromPages !== undefined) {
     const trimmed = fromPages.trim()
-    if (trimmed === '') return '/'
-    let b = trimmed
-    if (!b.startsWith('/')) b = `/${b}`
-    if (!b.endsWith('/')) b = `${b}/`
-    return b
+    if (trimmed === '') return ''
+    let b = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+    return b.replace(/\/$/, '') || ''
   }
 
   const gh = process.env.GITHUB_REPOSITORY
   if (gh?.includes('/')) {
     const repo = gh.split('/')[1] ?? ''
-    if (/^.+\.github\.io$/i.test(repo)) return '/'
-    return `/${repo}/`
+    if (/^.+\.github\.io$/i.test(repo)) return ''
+    return `/${repo}`
   }
-  return '/'
+  return ''
+}
+
+/** With `base: './'`, deep URLs ending in `/` would resolve `./assets` under the wrong folder; `<base>` fixes that. */
+function injectPagesBaseHref(basenameNoSlash: string): import('vite').Plugin {
+  const href = basenameNoSlash ? `${basenameNoSlash}/` : '/'
+  return {
+    name: 'inject-pages-base-href',
+    transformIndexHtml(html) {
+      if (/<base\s/i.test(html)) return html
+      return html.replace(/<head\s*>/i, `<head>\n    <base href="${href}" />`)
+    },
+  }
 }
 
 /** GitHub Pages serves 404.html for unknown paths; copy SPA shell so client routing works on refresh. */
@@ -59,23 +65,33 @@ function figmaAssetResolver() {
   }
 }
 
-export default defineConfig({
-  base: resolveBase(),
-  plugins: [
-    figmaAssetResolver(),
-    ghPagesSpaFallback(),
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+export default defineConfig(({ command }) => {
+  const isProdBuild = command === 'build'
+  const routerBasename = isProdBuild ? resolveRouterBasename() : ''
 
-  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
-  assetsInclude: ['**/*.svg', '**/*.csv'],
+  return {
+    // Dev/preview: `/`. Production: relative asset URLs + `<base href>` so deep routes still load JS/CSS.
+    base: isProdBuild ? './' : '/',
+    define: {
+      __ROUTER_BASENAME__: JSON.stringify(routerBasename),
+    },
+    plugins: [
+      ...(isProdBuild ? [injectPagesBaseHref(routerBasename)] : []),
+      figmaAssetResolver(),
+      ghPagesSpaFallback(),
+      // The React and Tailwind plugins are both required for Make, even if
+      // Tailwind is not being actively used – do not remove them
+      react(),
+      tailwindcss(),
+    ],
+    resolve: {
+      alias: {
+        // Alias @ to the src directory
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+
+    // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
+    assetsInclude: ['**/*.svg', '**/*.csv'],
+  }
 })
