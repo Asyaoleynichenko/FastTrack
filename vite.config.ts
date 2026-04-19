@@ -94,12 +94,22 @@ export default defineConfig(({ command }) => {
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
     assetsInclude: ['**/*.svg', '**/*.csv'],
 
-    // One JS file: fewer round-trips on slow networks (GitHub Pages + HTTP/1.1 quirks).
     build: {
-      cssCodeSplit: false,
       rollupOptions: {
         output: {
-          inlineDynamicImports: true,
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            if (
+              id.includes('node_modules/react-dom') ||
+              id.includes('node_modules/react/') ||
+              id.includes('node_modules/scheduler') ||
+              id.includes('node_modules/react-router') ||
+              id.includes('node_modules/lucide-react') ||
+              id.includes('node_modules/@radix-ui')
+            )
+              return 'react-vendor';
+            if (id.includes('node_modules/recharts')) return 'recharts';
+          },
         },
       },
     },

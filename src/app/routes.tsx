@@ -1,10 +1,36 @@
-import { createBrowserRouter, Outlet } from 'react-router';
+import { createBrowserRouter, Outlet, useRouteError } from 'react-router';
 import { TopNav } from './components/TopNav';
 import { ObjectsListPage } from './components/ObjectsListPage';
 import { ServerDetailsPage } from './components/ServerDetailsPage';
 import { RacksPage } from './components/RacksPage';
 import { NetworkPage } from './components/NetworkPage';
 import { NotificationsPage } from './components/NotificationsPage';
+
+/** Shown when the route tree throws (e.g. stale chunk after deploy on GitHub Pages). */
+function RouteError() {
+  const err = useRouteError();
+  const message =
+    err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
+  const staleChunk = /Failed to fetch|Loading chunk|dynamically imported module/i.test(message);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-bg px-6 py-12 text-center">
+      <p className="text-lg font-semibold text-hi">Не удалось загрузить страницу</p>
+      <p className="max-w-md text-sm text-mid">
+        {staleChunk
+          ? 'Часто это устаревший кэш после обновления сайта. Сделайте полное обновление (Ctrl+Shift+R или Cmd+Shift+R) или нажмите кнопку ниже.'
+          : message}
+      </p>
+      <button
+        type="button"
+        className="rounded-lg bg-[#2563eb] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1d4ed8]"
+        onClick={() => window.location.reload()}
+      >
+        Перезагрузить
+      </button>
+    </div>
+  );
+}
 
 function Root() {
   return (
@@ -32,6 +58,7 @@ export const router = createBrowserRouter(
   [
     {
       path: '/',
+      errorElement: <RouteError />,
       Component: Root,
       children: [
         { index: true, Component: ObjectsListPage },
