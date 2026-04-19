@@ -1,10 +1,32 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, useRouteError } from 'react-router';
 import { TopNav } from './components/TopNav';
-import { ObjectsListPage } from './components/ObjectsListPage';
-import { ServerDetailsPage } from './components/ServerDetailsPage';
-import { RacksPage } from './components/RacksPage';
-import { NetworkPage } from './components/NetworkPage';
-import { NotificationsPage } from './components/NotificationsPage';
+
+const ObjectsListPage = lazy(() =>
+  import('./components/ObjectsListPage').then((m) => ({ default: m.ObjectsListPage })),
+);
+const ServerDetailsPage = lazy(() =>
+  import('./components/ServerDetailsPage').then((m) => ({ default: m.ServerDetailsPage })),
+);
+const RacksPage = lazy(() => import('./components/RacksPage').then((m) => ({ default: m.RacksPage })));
+const NetworkPage = lazy(() =>
+  import('./components/NetworkPage').then((m) => ({ default: m.NetworkPage })),
+);
+const NotificationsPage = lazy(() =>
+  import('./components/NotificationsPage').then((m) => ({ default: m.NotificationsPage })),
+);
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-mid" aria-busy="true">
+      <span
+        className="inline-block w-8 h-8 rounded-full border-2 border-line border-t-[#2563eb] animate-spin"
+        aria-hidden
+      />
+      <span className="text-sm">Loading…</span>
+    </div>
+  );
+}
 
 /** Shown when the route tree throws (e.g. stale chunk after deploy on GitHub Pages). */
 function RouteError() {
@@ -37,7 +59,9 @@ function Root() {
     <div className="min-h-screen flex flex-col bg-bg">
       <TopNav />
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
