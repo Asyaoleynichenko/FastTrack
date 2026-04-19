@@ -1,18 +1,19 @@
 import fs from 'node:fs'
 import path from 'path'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 /**
- * Path prefix for the SPA (no trailing slash), empty string at site root.
- * CI: `VITE_BASE_PATH` from `actions/configure-pages` `base_path` (`""` at root).
+ * Path prefix for the SPA (no leading slash duplicate, no trailing slash).
+ * Reads `VITE_BASE_PATH` from `.env.production` (via loadEnv) or `process.env` (CI).
  * Fallback: repo segment of `GITHUB_REPOSITORY`, except `*.github.io` user/org sites.
  */
-function resolveRouterBasename(): string {
-  const fromPages = process.env.VITE_BASE_PATH
+function resolveRouterBasename(mode: string): string {
+  const fileEnv = loadEnv(mode, process.cwd(), '')
+  const fromPages = fileEnv.VITE_BASE_PATH ?? process.env.VITE_BASE_PATH
   if (fromPages !== undefined) {
-    const trimmed = fromPages.trim()
+    const trimmed = String(fromPages).trim()
     if (trimmed === '') return ''
     let b = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
     return b.replace(/\/$/, '') || ''
@@ -27,9 +28,13 @@ function resolveRouterBasename(): string {
   return ''
 }
 
-/** With `base: './'`, deep URLs ending in `/` would resolve `./assets` under the wrong folder; `<base>` fixes that. */
+/**
+ * With `base: './'`, a wrong `<base>` breaks script URLs on GitHub project pages:
+ * `<base href="/">` makes `./assets/index.js` resolve to `/assets/...` (404) instead of `/repo/assets/...`.
+ * Use `./` when there is no path prefix so assets stay under the current origin path.
+ */
 function injectPagesBaseHref(basenameNoSlash: string): import('vite').Plugin {
-  const href = basenameNoSlash ? `${basenameNoSlash}/` : '/'
+  const href = basenameNoSlash ? `${basenameNoSlash}/` : './'
   return {
     name: 'inject-pages-base-href',
     transformIndexHtml(html) {
@@ -84,9 +89,9 @@ function modulePreloadHighPriority(): import('vite').Plugin {
   }
 }
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
   const isProdBuild = command === 'build'
-  const routerBasename = isProdBuild ? resolveRouterBasename() : ''
+  const routerBasename = isProdBuild ? resolveRouterBasename(mode) : ''
 
   return {
     // Dev/preview: `/`. Production: relative asset URLs + `<base href>` so deep routes still load JS/CSS.
