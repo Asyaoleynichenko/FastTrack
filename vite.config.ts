@@ -120,23 +120,13 @@ export default defineConfig(({ command }) => {
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
     assetsInclude: ['**/*.svg', '**/*.csv'],
 
+    // One JS output: avoids a second round-trip and stale vendor chunk after deploy (GitHub Pages + cache).
     build: {
       target: 'es2022',
+      cssCodeSplit: false,
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) return;
-            if (
-              id.includes('node_modules/react-dom') ||
-              id.includes('node_modules/react/') ||
-              id.includes('node_modules/scheduler') ||
-              id.includes('node_modules/react-router') ||
-              id.includes('node_modules/lucide-react') ||
-              id.includes('node_modules/@radix-ui')
-            )
-              return 'react-vendor';
-            if (id.includes('node_modules/recharts')) return 'recharts';
-          },
+          inlineDynamicImports: true,
         },
       },
     },
