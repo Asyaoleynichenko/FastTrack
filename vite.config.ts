@@ -65,6 +65,25 @@ function figmaAssetResolver() {
   }
 }
 
+/** Helps the browser start fetching JS chunks earlier on slow links (GitHub Pages). */
+function modulePreloadHighPriority(): import('vite').Plugin {
+  return {
+    name: 'modulepreload-fetchpriority-high',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        return html.replace(
+          /<link rel="modulepreload"([^>]*?)>/g,
+          (full, attrs: string) => {
+            if (attrs.includes('fetchpriority')) return full
+            return `<link rel="modulepreload"${attrs} fetchpriority="high">`
+          },
+        )
+      },
+    },
+  }
+}
+
 export default defineConfig(({ command }) => {
   const isProdBuild = command === 'build'
   const routerBasename = isProdBuild ? resolveRouterBasename() : ''
@@ -76,7 +95,7 @@ export default defineConfig(({ command }) => {
       __ROUTER_BASENAME__: JSON.stringify(routerBasename),
     },
     plugins: [
-      ...(isProdBuild ? [injectPagesBaseHref(routerBasename)] : []),
+      ...(isProdBuild ? [injectPagesBaseHref(routerBasename), modulePreloadHighPriority()] : []),
       figmaAssetResolver(),
       ghPagesSpaFallback(),
       // The React and Tailwind plugins are both required for Make, even if
@@ -91,10 +110,18 @@ export default defineConfig(({ command }) => {
       },
     },
 
+    esbuild: isProdBuild
+      ? {
+          drop: ['console', 'debugger'],
+          legalComments: 'none',
+        }
+      : undefined,
+
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
     assetsInclude: ['**/*.svg', '**/*.csv'],
 
     build: {
+      target: 'es2022',
       rollupOptions: {
         output: {
           manualChunks(id) {
