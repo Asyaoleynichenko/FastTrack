@@ -10,3 +10,8 @@
   /* swap: иначе при optional браузер может так и не подставить Knockout */
   font-display: swap;
 }
+
+/* Логотип в шапке — в CSS, без inline style (стабильнее для продакшена). */
+.font-infra-brand {
+  font-family: 'Knockout', 'Inter Variable', system-ui, sans-serif;
+}
