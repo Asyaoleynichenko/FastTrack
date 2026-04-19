@@ -7,5 +7,6 @@
   src: url('../assets/fonts/Knockout-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
-  font-display: optional;
+  /* swap: иначе при optional браузер может так и не подставить Knockout */
+  font-display: swap;
 }
